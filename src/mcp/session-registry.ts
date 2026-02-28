@@ -5,7 +5,7 @@ import { LLMClient } from '../agent/llm-client.js';
 import { AgentRunner } from '../agent/runner.js';
 import { BrowserClient } from '../tools/browser/client.js';
 import { createToolRegistry } from '../tools/index.js';
-import type { ToolContext } from '../tools/types.js';
+import { ScreenshotStore, type ToolContext } from '../tools/types.js';
 
 export interface Session {
   id: string;
@@ -14,6 +14,7 @@ export interface Session {
   config: Config;
   runner: AgentRunner;
   browserClient: BrowserClient;
+  screenshots: ScreenshotStore;
   timeoutHandle: ReturnType<typeof setTimeout>;
 }
 
@@ -22,10 +23,11 @@ export class SessionRegistry {
 
   create(config: Config): Session {
     const id = crypto.randomUUID();
-    const contextManager = new ContextManager(config.contextWindowSize);
+    const contextManager = new ContextManager();
     const llmClient = new LLMClient(config);
     const browserClient = new BrowserClient(config.cdpUrl);
     const toolRegistry = createToolRegistry();
+    const screenshotStore = new ScreenshotStore();
 
     const toolContext: ToolContext = {
       sessionId: id,
@@ -34,6 +36,7 @@ export class SessionRegistry {
         // Lazy connection
         return browserClient.connect().then(() => browserClient);
       },
+      screenshots: screenshotStore,
     };
 
     const runner = new AgentRunner(
@@ -56,6 +59,7 @@ export class SessionRegistry {
       config,
       runner,
       browserClient,
+      screenshots: screenshotStore,
       timeoutHandle,
     };
 

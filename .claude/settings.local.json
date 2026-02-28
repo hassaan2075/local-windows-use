@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(node dist/cli.js init)",
+      "Bash(npm install tsx --save-dev)",
+      "Bash(node -e \"const {Monitor} = require\\(''node-screenshots''\\); const m = Monitor.all\\(\\)[0]; const img = m.captureImageSync\\(\\); console.log\\(Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(img\\)\\)\\)\")",
+      "Bash(node -e \"const {Monitor} = require\\(''node-screenshots''\\); const m = Monitor.all\\(\\)[0]; const img = m.captureImageSync\\(\\); console.log\\(''PNG size:'', img.toPngSync\\(\\).length\\); console.log\\(''JPEG default:'', img.toJpegSync\\(\\).length\\); console.log\\(''JPEG 80:'', img.toJpegSync\\(80\\).length\\); console.log\\(''JPEG 50:'', img.toJpegSync\\(50\\).length\\); console.log\\(''Image size:'', img.width\\(\\), ''x'', img.height\\(\\)\\)\")",
+      "Bash(npx tsc --noEmit)"
+    ]
+  }
+}

@@ -8,11 +8,19 @@ import { buildSystemPrompt } from './system-prompt.js';
 
 export interface RunResult {
   status: 'completed' | 'blocked' | 'need_guidance';
-  summary: string;
-  screenshot?: string;
+  /** Rich content with [Image:img_X] markers. Use parseReportContent() to expand. */
+  content: string;
   data?: unknown;
   stepsUsed: number;
 }
+
+export type StepEvent =
+  | { type: 'thinking'; step: number; content: string }
+  | { type: 'tool_call'; step: number; name: string; args: unknown }
+  | { type: 'tool_result'; step: number; name: string; result: string }
+  | { type: 'error'; step: number; message: string };
+
+export type OnStepCallback = (event: StepEvent) => void;
 
 export class AgentRunner {
   private llmClient: LLMClient;
@@ -21,6 +29,8 @@ export class AgentRunner {
   private config: Config;
   private toolContext: ToolContext;
   private initialized = false;
+  private onStep: OnStepCallback | null = null;
+  private roundsUsed = 0;
 
   constructor(
     llmClient: LLMClient,
@@ -36,7 +46,37 @@ export class AgentRunner {
     this.toolContext = toolContext;
   }
 
+  /** Register a callback to receive step-by-step progress events */
+  setOnStep(cb: OnStepCallback): void {
+    this.onStep = cb;
+  }
+
+  private emit(event: StepEvent): void {
+    this.onStep?.(event);
+  }
+
+  /** How many instruction rounds have been used in this session */
+  get currentRound(): number {
+    return this.roundsUsed;
+  }
+
+  /** Whether this session has exhausted its max rounds */
+  get roundsExhausted(): boolean {
+    return this.roundsUsed >= this.config.maxRounds;
+  }
+
   async run(instruction: string): Promise<RunResult> {
+    // Check round limit
+    if (this.roundsExhausted) {
+      return {
+        status: 'blocked',
+        content: `Session has reached the maximum number of instruction rounds (${this.config.maxRounds}). Create a new session to continue.`,
+        stepsUsed: 0,
+      };
+    }
+
+    this.roundsUsed++;
+
     // Inject system prompt on first run
     if (!this.initialized) {
       this.contextManager.append({
@@ -58,7 +98,7 @@ export class AgentRunner {
       stepsUsed++;
       const remaining = this.config.maxSteps - stepsUsed;
 
-      const messages = this.contextManager.getWindow();
+      const messages = this.contextManager.getMessages();
 
       // Warn the model when steps are running low
       if (remaining <= 3 && remaining >= 0) {
@@ -75,9 +115,10 @@ export class AgentRunner {
         response = await this.llmClient.chat(messages, tools);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
+        this.emit({ type: 'error', step: stepsUsed, message: `LLM API error: ${msg}` });
         return {
           status: 'blocked',
-          summary: `LLM API error: ${msg}`,
+          content: `LLM API error: ${msg}`,
           stepsUsed,
         };
       }
@@ -86,12 +127,17 @@ export class AgentRunner {
       if (!choice) {
         return {
           status: 'blocked',
-          summary: 'LLM returned empty response',
+          content: 'LLM returned empty response',
           stepsUsed,
         };
       }
 
       const message = choice.message;
+
+      // If model has text content (thinking), emit it
+      if (message.content) {
+        this.emit({ type: 'thinking', step: stepsUsed, content: message.content });
+      }
 
       // If model stops without tool calls, treat as implicit report
       if (choice.finish_reason === 'stop' || !message.tool_calls?.length) {
@@ -99,7 +145,7 @@ export class AgentRunner {
         this.contextManager.append({ role: 'assistant', content: text });
         return {
           status: 'need_guidance',
-          summary: text || 'Agent stopped without calling report.',
+          content: text || 'Agent stopped without calling report.',
           stepsUsed,
         };
       }
@@ -109,10 +155,12 @@ export class AgentRunner {
 
       // Process tool calls sequentially
       for (const toolCall of message.tool_calls) {
+        const toolName = toolCall.function.name;
         let args: unknown;
         try {
           args = JSON.parse(toolCall.function.arguments);
         } catch {
+          this.emit({ type: 'error', step: stepsUsed, message: `Failed to parse args for ${toolName}` });
           this.contextManager.append({
             role: 'tool',
             tool_call_id: toolCall.id,
@@ -121,15 +169,18 @@ export class AgentRunner {
           continue;
         }
 
+        this.emit({ type: 'tool_call', step: stepsUsed, name: toolName, args });
+
         let result: ToolResult;
         try {
           result = await this.toolRegistry.execute(
-            toolCall.function.name,
+            toolName,
             args,
             this.toolContext,
           );
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
+          this.emit({ type: 'error', step: stepsUsed, message: `${toolName} failed: ${msg}` });
           this.contextManager.append({
             role: 'tool',
             tool_call_id: toolCall.id,
@@ -140,6 +191,7 @@ export class AgentRunner {
 
         // Check for report signal — the only clean exit
         if (result.type === 'report') {
+          this.emit({ type: 'tool_result', step: stepsUsed, name: toolName, result: `[${result.status}] report submitted` });
           this.contextManager.append({
             role: 'tool',
             tool_call_id: toolCall.id,
@@ -147,20 +199,20 @@ export class AgentRunner {
           });
           return {
             status: result.status,
-            summary: result.summary,
-            screenshot: result.screenshot,
+            content: result.content,
             data: result.data,
             stepsUsed,
           };
         }
 
-        // Image results: send as multimodal content
+        // Image results: send as multimodal content with screenshot ID
         if (result.type === 'image') {
+          this.emit({ type: 'tool_result', step: stepsUsed, name: toolName, result: `Screenshot captured (${result.screenshotId})` });
           this.contextManager.append({
             role: 'tool',
             tool_call_id: toolCall.id,
             content: [
-              { type: 'text', text: 'Screenshot captured.' },
+              { type: 'text', text: `Screenshot captured. ID: ${result.screenshotId}` },
               {
                 type: 'image_url',
                 image_url: {
@@ -170,7 +222,11 @@ export class AgentRunner {
             ],
           } as any);
         } else {
-          // Text results
+          // Text results — truncate for display
+          const preview = result.content.length > 200
+            ? result.content.slice(0, 200) + '...'
+            : result.content;
+          this.emit({ type: 'tool_result', step: stepsUsed, name: toolName, result: preview });
           this.contextManager.append({
             role: 'tool',
             tool_call_id: toolCall.id,
@@ -183,7 +239,7 @@ export class AgentRunner {
     // Max steps exceeded
     return {
       status: 'blocked',
-      summary: `Exceeded maximum steps limit (${this.config.maxSteps}). Task may be incomplete.`,
+      content: `Exceeded maximum steps limit (${this.config.maxSteps}). Task may be incomplete.`,
       stepsUsed,
     };
   }

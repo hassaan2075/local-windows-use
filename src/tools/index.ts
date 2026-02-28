@@ -5,6 +5,7 @@ import { keyboardTypeTool, keyboardPressTool } from './windows/keyboard.js';
 import { runCommandTool } from './windows/command.js';
 import { fileReadTool } from './file/read.js';
 import { fileWriteTool } from './file/write.js';
+import { useLocalImageTool } from './file/image.js';
 import { browserNavigateTool } from './browser/navigate.js';
 import { browserClickTool } from './browser/click.js';
 import { browserTypeTool } from './browser/type.js';
@@ -28,6 +29,7 @@ export function createToolRegistry(): ToolRegistry {
   // File tools
   registry.register(fileReadTool);
   registry.register(fileWriteTool);
+  registry.register(useLocalImageTool);
 
   // Browser tools
   registry.register(browserNavigateTool);

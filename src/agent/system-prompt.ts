@@ -23,7 +23,16 @@ Call \`report\` when:
 - **"blocked"**: You cannot proceed (CAPTCHA, login wall, unexpected error). Explain what's blocking you.
 - **"need_guidance"**: You need a decision or clarification. Describe what you need.
 
-Calling \`report\` stops your execution. Include a concise summary and optionally a screenshot as evidence.
+Calling \`report\` stops your execution. The \`content\` field supports a rich document format — mix text with screenshots using \`[Image:img_X]\` markers:
+
+\`\`\`
+report({
+  status: "completed",
+  content: "Here is what I found:\\n[Image:img_2]\\nThe page shows the search results.\\n[Image:img_3]\\nI also checked the sidebar."
+})
+\`\`\`
+
+Each screenshot tool returns a screenshot ID (e.g. img_1, img_2). Use these IDs to embed images in your report.
 
 ## Important
 - Do NOT keep retrying the same failing action. If something fails twice, call \`report\` with status "blocked".

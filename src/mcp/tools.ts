@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { SessionRegistry } from './session-registry.js';
 import { loadConfig } from '../config/loader.js';
+import { parseReportContent } from '../tools/types.js';
 
 export function registerMcpTools(
   server: McpServer,
@@ -18,6 +19,7 @@ export function registerMcpTools(
       cdp_url: z.string().optional().describe('Chrome CDP URL (default: http://localhost:9222)'),
       timeout_ms: z.number().optional().describe('Session inactivity timeout in ms (default: 300000)'),
       max_steps: z.number().optional().describe('Max tool-calling steps per instruction (default: 50)'),
+      max_rounds: z.number().optional().describe('Max instruction rounds per session (default: 20)'),
     },
     async (args) => {
       const config = loadConfig({
@@ -27,6 +29,7 @@ export function registerMcpTools(
         cdpUrl: args.cdp_url,
         timeoutMs: args.timeout_ms,
         maxSteps: args.max_steps,
+        maxRounds: args.max_rounds,
       });
 
       const session = registry.create(config);
@@ -45,7 +48,7 @@ export function registerMcpTools(
   // Tool 2: send_instruction
   server.tool(
     'send_instruction',
-    'Send a task instruction to the agent in a session. The agent executes it and returns a status report.',
+    'Send a task instruction to the agent in a session. The agent executes it and returns a rich report with text and images.',
     {
       session_id: z.string().describe('Session ID from create_session'),
       instruction: z.string().describe('What you want the agent to do, in natural language'),
@@ -72,27 +75,36 @@ export function registerMcpTools(
 
       registry.touch(args.session_id);
 
-      const content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> = [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            status: result.status,
-            summary: result.summary,
-            steps_used: result.stepsUsed,
-            ...(result.data !== undefined ? { data: result.data } : {}),
-          }),
-        },
-      ];
+      // Build multimodal MCP response by expanding [Image:id] markers
+      const mcpContent: Array<{ type: string; text?: string; data?: string; mimeType?: string }> = [];
 
-      if (result.screenshot) {
-        content.push({
-          type: 'image',
-          data: result.screenshot,
-          mimeType: 'image/png',
-        });
+      // Metadata header
+      mcpContent.push({
+        type: 'text',
+        text: JSON.stringify({
+          status: result.status,
+          steps_used: result.stepsUsed,
+          round: session.runner.currentRound,
+          rounds_remaining: session.config.maxRounds - session.runner.currentRound,
+          ...(result.data !== undefined ? { data: result.data } : {}),
+        }),
+      });
+
+      // Expand report content: [Image:img_X] markers → actual image blocks
+      const blocks = parseReportContent(result.content, session.screenshots);
+      for (const block of blocks) {
+        if (block.type === 'text') {
+          mcpContent.push({ type: 'text', text: block.text });
+        } else {
+          mcpContent.push({
+            type: 'image',
+            data: block.base64,
+            mimeType: block.mimeType,
+          });
+        }
       }
 
-      return { content: content as any };
+      return { content: mcpContent as any };
     },
   );
 
