@@ -13,13 +13,13 @@
 
 ---
 
-## The Problem
+## Why?
 
 When AI agents operate Windows or browsers, **every screenshot eats 1000+ tokens**. A single "open Chrome and search something" task can burn through 10K–50K tokens of your expensive model's context — just on screenshots and tool calls.
 
 **That's like hiring a CEO to move the mouse.**
 
-## The Solution
+## How it works
 
 `windows-use` introduces a **"big model directs, small model executes"** architecture:
 
@@ -46,15 +46,35 @@ Big Model                    windows-use                    Small Model
 
 Your big model just says *"open Notepad and type Hello"* — the small model handles all the screenshots, clicking, and verification autonomously, then reports back a concise summary.
 
+## Designed for simplicity
+
+> **You don't need to be an expert.** If you can run `npm install`, you can use this.
+
+Most computer-use tools ask you to set up Docker, configure sandboxes, manage virtual displays, or fight with permissions. **windows-use does none of that.**
+
+- **One dependency** — `npm install -g windows-use`. That's it. No Docker, no Python environments, no system-level permissions.
+- **One config** — Run `windows-use init`, paste your API key and endpoint, done. Works with any OpenAI-compatible API.
+- **Your real Chrome** — No headless puppeteer, no sandboxed browser. It connects to **your actual Chrome** via CDP — with your cookies, logins, extensions, and bookmarks intact. Just launch Chrome with `--remote-debugging-port=9222`.
+- **No admin / root needed** — Runs entirely in user space. No elevated privileges, no security prompts.
+- **Share config in one line** — `windows-use init --export` gives you a base64 string. Send it to a teammate, they run `windows-use init <string>`, instant setup.
+
+```bash
+# That's literally the entire setup:
+npm install -g windows-use
+windows-use init
+windows-use "Open Notepad and type Hello World"
+```
+
 ## Key Features
 
-- **Context savings** — Keep your expensive model's context window for reasoning, not screenshots
+- **Save 90% context** — Keep your expensive model's context window for reasoning, not screenshots
 - **Any OpenAI-compatible model** — Qwen, DeepSeek, Ollama, vLLM, GPT-4o-mini, or any local model
 - **16 built-in tools** — Screen capture with coordinate grid, mouse, keyboard, browser automation, file I/O
-- **Real Chrome via CDP** — Uses your existing cookies, login state, and extensions (no webdriver detection)
+- **Your real Chrome** — Uses your existing cookies, login state, and extensions (no webdriver detection)
 - **MCP server** — Drop-in integration with Claude Desktop, VS Code, and any MCP client
 - **Rich reports** — Text + embedded screenshots, so the big model sees exactly what it needs
 - **CLI + REPL + API** — Use from terminal, interactively, or programmatically
+- **Zero config headache** — No Docker, no sandbox, no permissions. Just an API key.
 
 ## Install
 
